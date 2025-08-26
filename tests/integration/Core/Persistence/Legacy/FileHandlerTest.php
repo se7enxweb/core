@@ -34,12 +34,12 @@ class FileHandlerTest extends RepositoryTestCase
         $contentTypeService->publishContentTypeDraft($contentType);
 
         // Create content, with two translations
-        $content = $this->createNewContent('Some Content', ['eng-GB', 'ger-DE']);
+        $content = $this->createNewContent('Some Content', ['eng-US', 'ger-DE']);
 
-        // Create draft in each translation
-        $content = $contentService->loadContent($content->getId(), ['eng-GB']);
-        $engUpdateStruct = $this->createUpdateStruct($content, '', ['eng-GB']);
-        $engDraft = $this->createContentDraft($content, 'eng-GB');
+        // Create draft in language with higher id ( later in the $contentLanguageService->loadLanguages() list than 'eng-US' )
+        $content = $contentService->loadContent($content->getId(), ['eng-US']);
+        $engUpdateStruct = $this->createUpdateStruct($content, '', ['eng-US']);
+        $engDraft = $this->createContentDraft($content, 'eng-US');
         $engDraft = $this->updateContent($engDraft, $engUpdateStruct);
 
         // Create new non-translatable field
@@ -50,8 +50,8 @@ class FileHandlerTest extends RepositoryTestCase
 
         $contentTypeService->publishContentTypeDraft($contentTypeDraft);
 
-        // Update eng-GB draft
-        $engUpdateStruct->setField('non_trans_field', '', 'eng-GB');
+        // Update eng-US draft
+        $engUpdateStruct->setField('non_trans_field', '', 'eng-US');
         $this->updateContent($engDraft, $engUpdateStruct);
     }
 
@@ -64,9 +64,9 @@ class FileHandlerTest extends RepositoryTestCase
             'ezstring'
         );
 
-        $fieldDefCreateStruct->names = ['eng-GB' => $name];
+        $fieldDefCreateStruct->names = ['eng-US' => $name];
         $fieldDefCreateStruct->descriptions = [
-            'eng-GB' => '',
+            'eng-US' => '',
         ];
         $fieldDefCreateStruct->isTranslatable = $isTranslatable;
 
@@ -77,8 +77,8 @@ class FileHandlerTest extends RepositoryTestCase
     {
         $contentTypeService = self::getContentTypeService();
         $typeCreateStruct = $contentTypeService->newContentTypeCreateStruct('multi_lang_drafts');
-        $typeCreateStruct->mainLanguageCode = 'eng-GB';
-        $typeCreateStruct->names = ['eng-GB' => 'Multi lang drafts'];
+        $typeCreateStruct->mainLanguageCode = 'eng-US';
+        $typeCreateStruct->names = ['eng-US' => 'Multi lang drafts'];
 
         return $typeCreateStruct;
     }
@@ -86,7 +86,7 @@ class FileHandlerTest extends RepositoryTestCase
     /**
      * @param string[] $languages
      */
-    protected function createNewContent(string $name, array $languages = ['eng-GB'], int $parentLocationId = 2): Content
+    protected function createNewContent(string $name, array $languages = ['eng-US'], int $parentLocationId = 2): Content
     {
         $contentTypeService = self::getContentTypeService();
         $contentService = self::getContentService();
@@ -145,10 +145,6 @@ class FileHandlerTest extends RepositoryTestCase
     {
         $contentService = self::getContentService();
 
-        // At this point, $updateStruct is correct. However, when it reaches Ibexa\Core\Persistence\Legacy\Content::updateFields(),
-        // it will have an additional field (in ger-DE). This does not happen when running the same code in
-        // a controller inside the application (you then need to replace 'self::get*Service()' with DI).
-        // It seems like for instance decoration Ibexa\Core\Event\ContentService is not used inside tests, maybe other decorations to?
         $updatedDraft = $contentService->updateContent($draft->versionInfo, $updateStruct);
 
         return $updatedDraft;
