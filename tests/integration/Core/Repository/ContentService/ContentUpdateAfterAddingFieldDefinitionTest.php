@@ -14,7 +14,7 @@ use Ibexa\Contracts\Core\Repository\Values\ContentType\ContentTypeCreateStruct;
 use Ibexa\Contracts\Core\Repository\Values\ContentType\FieldDefinitionCreateStruct;
 use Ibexa\Tests\Integration\Core\RepositoryTestCase;
 
-class FileHandlerTest extends RepositoryTestCase
+class ContentUpdateAfterAddingFieldDefinitionTest extends RepositoryTestCase
 {
     public function testUpdateFields(): void
     {
