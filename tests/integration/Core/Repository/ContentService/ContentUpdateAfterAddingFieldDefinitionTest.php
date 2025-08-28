@@ -8,11 +8,6 @@ declare(strict_types=1);
 
 namespace Ibexa\Tests\Integration\Core\Persistence\Legacy;
 
-use Ibexa\Contracts\Core\Repository\Exceptions\BadStateException;
-use Ibexa\Contracts\Core\Repository\Exceptions\ContentTypeFieldDefinitionValidationException;
-use Ibexa\Contracts\Core\Repository\Exceptions\InvalidArgumentException;
-use Ibexa\Contracts\Core\Repository\Exceptions\NotFoundException;
-use Ibexa\Contracts\Core\Repository\Exceptions\UnauthorizedException;
 use Ibexa\Contracts\Core\Repository\Values\Content\Content;
 use Ibexa\Contracts\Core\Repository\Values\Content\ContentUpdateStruct;
 use Ibexa\Contracts\Core\Repository\Values\ContentType\ContentTypeCreateStruct;
@@ -140,21 +135,15 @@ final class ContentUpdateAfterAddingFieldDefinitionTest extends RepositoryTestCa
 
     protected function createContentDraft(Content $content, string $languageCode): Content
     {
-        $contentService = self::getContentService();
         $contentLanguageService = self::getLanguageService();
 
         $language = $contentLanguageService->loadLanguage($languageCode);
-        $draft = $contentService->createContentDraft($content->contentInfo, null, null, $language);
 
-        return $draft;
+        return self::getContentService()->createContentDraft($content->contentInfo, null, null, $language);
     }
 
     protected function updateContent(Content $draft, ContentUpdateStruct $updateStruct): Content
     {
-        $contentService = self::getContentService();
-
-        $updatedDraft = $contentService->updateContent($draft->versionInfo, $updateStruct);
-
-        return $updatedDraft;
+        return self::getContentService()->updateContent($draft->versionInfo, $updateStruct);
     }
 }
