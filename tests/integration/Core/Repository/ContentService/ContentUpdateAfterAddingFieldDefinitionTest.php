@@ -8,14 +8,22 @@ declare(strict_types=1);
 
 namespace Ibexa\Tests\Integration\Core\Persistence\Legacy;
 
+use Ibexa\Contracts\Core\Repository\Exceptions\BadStateException;
+use Ibexa\Contracts\Core\Repository\Exceptions\ContentTypeFieldDefinitionValidationException;
+use Ibexa\Contracts\Core\Repository\Exceptions\InvalidArgumentException;
+use Ibexa\Contracts\Core\Repository\Exceptions\NotFoundException;
+use Ibexa\Contracts\Core\Repository\Exceptions\UnauthorizedException;
 use Ibexa\Contracts\Core\Repository\Values\Content\Content;
 use Ibexa\Contracts\Core\Repository\Values\Content\ContentUpdateStruct;
 use Ibexa\Contracts\Core\Repository\Values\ContentType\ContentTypeCreateStruct;
 use Ibexa\Contracts\Core\Repository\Values\ContentType\FieldDefinitionCreateStruct;
 use Ibexa\Tests\Integration\Core\RepositoryTestCase;
 
-class ContentUpdateAfterAddingFieldDefinitionTest extends RepositoryTestCase
+final class ContentUpdateAfterAddingFieldDefinitionTest extends RepositoryTestCase
 {
+    /**
+     * @throws \Ibexa\Contracts\Core\Repository\Exceptions\Exception
+     */
     public function testUpdateFields(): void
     {
         $contentService = self::getContentService();
@@ -141,7 +149,7 @@ class ContentUpdateAfterAddingFieldDefinitionTest extends RepositoryTestCase
         return $draft;
     }
 
-    protected function updateContent(Content $draft, ContentUpdateStruct $updateStruct/*, array $languages*/): Content
+    protected function updateContent(Content $draft, ContentUpdateStruct $updateStruct): Content
     {
         $contentService = self::getContentService();
 
