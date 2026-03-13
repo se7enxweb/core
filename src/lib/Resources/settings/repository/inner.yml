@@ -160,10 +160,12 @@ services:
         alias: 'Ibexa\Core\Repository\ProxyFactory\ProxyGenerator'
 
     Ibexa\Core\Repository\ProxyFactory\ProxyDomainMapperFactory:
+        lazy: 'Ibexa\Core\Repository\ProxyFactory\ProxyDomainMapperFactoryInterface'
         arguments:
             $proxyGenerator: '@Ibexa\Core\Repository\ProxyFactory\ProxyGeneratorInterface'
 
     Ibexa\Core\Repository\ProxyFactory\ProxyDomainMapper:
+        lazy: 'Ibexa\Core\Repository\ProxyFactory\ProxyDomainMapperInterface'
         factory: ['@Ibexa\Core\Repository\ProxyFactory\ProxyDomainMapperFactory', 'create']
         arguments:
             $repository: '@Ibexa\Core\Repository\Repository'

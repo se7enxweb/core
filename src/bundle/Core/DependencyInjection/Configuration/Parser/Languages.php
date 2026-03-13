@@ -13,14 +13,10 @@ use Symfony\Component\Config\Definition\Builder\NodeBuilder;
 
 class Languages extends AbstractParser
 {
-    private $siteAccessesByLanguages = [];
+    /** @var array<string, string[]> */
+    private array $siteAccessesByLanguages = [];
 
-    /**
-     * Adds semantic configuration definition.
-     *
-     * @param \Symfony\Component\Config\Definition\Builder\NodeBuilder $nodeBuilder Node just under ezpublish.system.<siteaccess>
-     */
-    public function addSemanticConfig(NodeBuilder $nodeBuilder)
+    public function addSemanticConfig(NodeBuilder $nodeBuilder): void
     {
         $nodeBuilder
             ->arrayNode('languages')
@@ -36,14 +32,16 @@ class Languages extends AbstractParser
             ->end();
     }
 
-    public function preMap(array $config, ContextualizerInterface $contextualizer)
+    public function preMap(array $config, ContextualizerInterface $contextualizer): void
     {
         $contextualizer->mapConfigArray('languages', $config, ContextualizerInterface::UNIQUE);
         $contextualizer->mapConfigArray('translation_siteaccesses', $config, ContextualizerInterface::UNIQUE);
 
         $container = $contextualizer->getContainer();
         if ($container->hasParameter('ibexa.site_access.by_language')) {
-            $this->siteAccessesByLanguages = $container->getParameter('ibexa.site_access.by_language');
+            /** @var array<string, string[]> $siteAccessesByLanguage */
+            $siteAccessesByLanguage = $container->getParameter('ibexa.site_access.by_language');
+            $this->siteAccessesByLanguages = $siteAccessesByLanguage;
         }
     }
 
@@ -59,7 +57,7 @@ class Languages extends AbstractParser
         }
     }
 
-    public function postMap(array $config, ContextualizerInterface $contextualizer)
+    public function postMap(array $config, ContextualizerInterface $contextualizer): void
     {
         $contextualizer->getContainer()->setParameter(
             'ibexa.site_access.by_language',
