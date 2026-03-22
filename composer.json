@@ -3,6 +3,9 @@
     "description": "7x Exponential Platform DXP (Stable; Open Source) core. Provides the Content Repository, its APIs, and the application's Symfony framework integration.",
     "homepage": "https://se7enx.com",
     "license": "(GPL-2.0-or-later or proprietary)",
+    "replace": {
+        "ibexa/core": "*"
+    },
     "suggest": {
         "php-64bit": "For support of more than 30 languages, a 64bit php installation on all involved prod/dev machines is required"
     },
