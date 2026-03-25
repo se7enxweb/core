@@ -70,7 +70,7 @@ final class InstallPlatformCommand extends Command
             'type',
             InputArgument::OPTIONAL,
             'The type of install. Available options: ' . implode(', ', array_keys($this->installers)),
-            'ibexa-oss'
+            'exponential-platform-dxp'
         );
         $this->addOption(
             'skip-indexing',
