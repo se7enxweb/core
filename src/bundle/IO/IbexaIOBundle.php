@@ -10,6 +10,7 @@ use Ibexa\Bundle\IO\DependencyInjection\Compiler;
 use Ibexa\Bundle\IO\DependencyInjection\ConfigurationFactory;
 use Ibexa\Bundle\IO\DependencyInjection\IbexaIOExtension;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 class IbexaIOBundle extends Bundle
@@ -30,7 +31,7 @@ class IbexaIOBundle extends Bundle
         parent::build($container);
     }
 
-    public function getContainerExtension()
+    public function getContainerExtension(): ?ExtensionInterface
     {
         if (!isset($this->extension)) {
             $this->extension = new IbexaIOExtension();

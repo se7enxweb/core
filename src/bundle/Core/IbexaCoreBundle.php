@@ -48,6 +48,7 @@ use Ibexa\Core\Base\Container\Compiler\Storage\Legacy\FieldValueConverterRegistr
 use Ibexa\Core\Base\Container\Compiler\Storage\Legacy\RoleLimitationConverterPass;
 use Symfony\Component\DependencyInjection\Compiler\PassConfig;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 class IbexaCoreBundle extends Bundle
@@ -99,7 +100,7 @@ class IbexaCoreBundle extends Bundle
         $container->registerForAutoconfiguration(VariableProvider::class)->addTag('ezplatform.view.variable_provider');
     }
 
-    public function getContainerExtension()
+    public function getContainerExtension(): ?ExtensionInterface
     {
         if (!isset($this->extension)) {
             $this->extension = new IbexaCoreExtension(
