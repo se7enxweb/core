@@ -86,6 +86,7 @@
         "phpunit/phpunit": "8.4.0"
     },
     "replace": {
+        "ibexa/core": "*",
         "ezsystems/ezplatform-kernel": "*"
     },
     "autoload": {
