@@ -115,6 +115,12 @@ final class InstallPlatformCommand extends Command implements BackwardCompatible
             $this->indexData($output, $siteaccess);
         }
 
+        $output->writeln('Generating GraphQL schema...');
+        $this->executeCommand($output, 'ibexa:graphql:generate-schema');
+
+        $output->writeln('Dumping JS translation files...');
+        $this->executeCommand($output, 'bazinga:js-translation:dump public/assets --merge-domains');
+
         return 0;
     }
 
