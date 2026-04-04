@@ -107,6 +107,11 @@ class SecurityListener implements EventSubscriberInterface
         $token = $event->getAuthenticationToken();
         $originalUser = $token->getUser();
         if ($originalUser instanceof IbexaUser || !$originalUser instanceof UserInterface) {
+            // Ensure the permission resolver is updated with the logged-in user so that
+            // checkSiteAccessPermission (priority 9) evaluates access as this user, not anonymous.
+            if ($originalUser instanceof IbexaUser) {
+                $this->permissionResolver->setCurrentUserReference($originalUser->getAPIUser());
+            }
             return;
         }
 

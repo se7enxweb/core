@@ -215,6 +215,12 @@ class Router implements SiteAccessRouterInterface, SiteAccessAware
      */
     public function matchByName($siteAccessName)
     {
+        // HttpUtils::generateUri() passes $request->attributes->all() to the URL generator,
+        // which includes the 'siteaccess' attribute as a SiteAccess object. Extract the name.
+        if ($siteAccessName instanceof SiteAccess) {
+            $siteAccessName = $siteAccessName->name;
+        }
+
         if (!$this->siteAccessProvider->isDefined($siteAccessName)) {
             throw new InvalidArgumentException("Invalid SiteAccess name provided for reverse matching: $siteAccessName");
         }
