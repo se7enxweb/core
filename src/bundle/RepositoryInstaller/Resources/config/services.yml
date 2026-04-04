@@ -23,6 +23,7 @@ services:
             $cachePool: '@ibexa.cache_pool'
             $environment: "%kernel.environment%"
             $repositoryConfigurationProvider: '@Ibexa\Bundle\Core\ApiLoader\RepositoryConfigurationProvider'
+            $projectDir: "%kernel.project_dir%"
         tags:
             - { name: console.command }
 

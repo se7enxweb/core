@@ -40,6 +40,9 @@ final class InstallPlatformCommand extends Command implements BackwardCompatible
     /** @var \Ibexa\Bundle\Core\ApiLoader\RepositoryConfigurationProvider */
     private $repositoryConfigurationProvider;
 
+    /** @var string */
+    private $projectDir;
+
     public const EXIT_GENERAL_DATABASE_ERROR = 4;
     public const EXIT_PARAMETERS_NOT_FOUND = 5;
     public const EXIT_UNKNOWN_INSTALL_TYPE = 6;
@@ -50,13 +53,15 @@ final class InstallPlatformCommand extends Command implements BackwardCompatible
         array $installers,
         CacheItemPoolInterface $cachePool,
         string $environment,
-        RepositoryConfigurationProvider $repositoryConfigurationProvider
+        RepositoryConfigurationProvider $repositoryConfigurationProvider,
+        string $projectDir = ''
     ) {
         $this->connection = $connection;
         $this->installers = $installers;
         $this->cachePool = $cachePool;
         $this->environment = $environment;
         $this->repositoryConfigurationProvider = $repositoryConfigurationProvider;
+        $this->projectDir = $projectDir;
         parent::__construct();
     }
 
@@ -268,7 +273,7 @@ final class InstallPlatformCommand extends Command implements BackwardCompatible
 
         $process = Process::fromShellCommandline(
             implode(' ', [$php, $console, $cmd]),
-            null,
+            $this->projectDir ?: null,
             null,
             null,
             $timeout
