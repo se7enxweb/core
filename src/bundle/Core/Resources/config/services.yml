@@ -63,6 +63,13 @@ services:
         public: true # @todo should be private
         alias: Ibexa\Bundle\Core\DependencyInjection\Configuration\ChainConfigResolver
 
+    # BC alias for legacy-bridge and other ezsystems packages that reference @ezpublish.config.resolver
+    # Without this, ezpublish.config.resolver is registered as a new empty ChainConfigResolver with no sub-resolvers,
+    # causing ParameterNotFoundException for any getParameter() call at request time.
+    ezpublish.config.resolver:
+        public: true
+        alias: Ibexa\Bundle\Core\DependencyInjection\Configuration\ChainConfigResolver
+
     Ibexa\Bundle\Core\DependencyInjection\Configuration\SiteAccessAware\DynamicSettingParser:
         class: Ibexa\Bundle\Core\DependencyInjection\Configuration\SiteAccessAware\DynamicSettingParser
 
