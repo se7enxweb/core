@@ -113,6 +113,7 @@ final class InstallPlatformCommand extends Command implements BackwardCompatible
 
         $installer->importSchema();
         $installer->importData();
+        $this->importNgLayoutsSchema($output);
         $installer->importBinaries();
         $this->cacheClear($output);
 
@@ -151,6 +152,17 @@ final class InstallPlatformCommand extends Command implements BackwardCompatible
 
     private function checkCreateDatabase(OutputInterface $output)
     {
+        // SQLite auto-creates the file on first connection; getListDatabasesSQL is unsupported.
+        if ($this->connection->getDatabasePlatform() instanceof \Doctrine\DBAL\Platforms\SqlitePlatform) {
+            $dbFile = $this->connection->getDatabase();
+            $output->writeln(sprintf('SQLite: ensuring database file directory exists for <comment>%s</comment>', $dbFile));
+            $dir = dirname($dbFile);
+            if (!is_dir($dir)) {
+                mkdir($dir, 0775, true);
+            }
+            return;
+        }
+
         $output->writeln(
             sprintf(
                 'Creating database <comment>%s</comment> if it does not exist, using doctrine:database:create --if-not-exists',
@@ -282,6 +294,33 @@ final class InstallPlatformCommand extends Command implements BackwardCompatible
         $process->run(static function ($type, $buffer) use ($output) { $output->write($buffer, false); });
         if (!$process->getExitCode() === 1) {
             throw new \RuntimeException(sprintf('An error occurred when executing the "%s" command.', escapeshellarg($cmd)));
+        }
+    }
+
+    /**
+     * Apply Netgen Layouts SQLite schema after main install.
+     * Netgen Layouts does not register a SchemaBuilderSubscriber, so its tables
+     * are not included in importSchema(). For SQLite we apply them automatically.
+     */
+    private function importNgLayoutsSchema(OutputInterface $output): void
+    {
+        if (!$this->connection->getDatabasePlatform() instanceof \Doctrine\DBAL\Platforms\SqlitePlatform) {
+            return;
+        }
+
+        $schemaFile = $this->projectDir . '/vendor/netgen/layouts-core/resources/data/schema.sqlite.sql';
+        if (!file_exists($schemaFile)) {
+            return;
+        }
+
+        $queries = array_filter(preg_split('(;\\s*$)m', file_get_contents($schemaFile)));
+        $output->writeln(sprintf(
+            '<info>Executing %d Netgen Layouts queries from <comment>%s</comment></info>',
+            count($queries),
+            $schemaFile
+        ));
+        foreach ($queries as $query) {
+            $this->connection->exec($query);
         }
     }
 
