@@ -27,7 +27,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 final class ExpireUserPasswordsCommand extends Command
 {
-    protected static $defaultName = 'ibexa:user:expire-password';
+    protected static $defaultName = 'exponential:user:expire-password';
 
     public const REQUIRE_NEW_PASSWORD_VALUE = true;
 
@@ -65,6 +65,11 @@ EOT;
         $this->userHandler = $userHandler;
 
         parent::__construct();
+    }
+
+    public function getAliases(): array
+    {
+        return ['ibexa:user:expire-password'];
     }
 
     protected function configure(): void

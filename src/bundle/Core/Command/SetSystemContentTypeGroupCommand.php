@@ -26,7 +26,7 @@ final class SetSystemContentTypeGroupCommand extends Command
 {
     private const DEFAULT_REPOSITORY_USER = 'admin';
 
-    protected static $defaultName = 'ibexa:content-type-group:set-system';
+    protected static $defaultName = 'exponential:content-type-group:set-system';
 
     /** @var \Ibexa\Contracts\Core\Repository\ContentTypeService */
     private $contentTypeService;
@@ -47,6 +47,11 @@ final class SetSystemContentTypeGroupCommand extends Command
         $this->contentTypeService = $contentTypeService;
         $this->permissionResolver = $permissionResolver;
         $this->userService = $userService;
+    }
+
+    public function getAliases(): array
+    {
+        return ['ibexa:content-type-group:set-system'];
     }
 
     protected function configure()

@@ -68,7 +68,7 @@ EOT;
     {
         $beforeRunningHints = self::BEFORE_RUNNING_HINTS;
         $this
-            ->setName('ibexa:content:cleanup-versions')
+            ->setName('exponential:content:cleanup-versions')
             ->setAliases($this->getDeprecatedAliases())
             ->setDescription('Removes unwanted content versions. Keeps the published version untouched. By default, also keeps the last archived/draft version.')
             ->addOption(
@@ -303,7 +303,7 @@ EOT
 
     public function getDeprecatedAliases(): array
     {
-        return ['ezplatform:content:cleanup-versions'];
+        return ['ibexa:content:cleanup-versions', 'ezplatform:content:cleanup-versions'];
     }
 }
 

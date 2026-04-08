@@ -39,8 +39,8 @@ class DebugConfigResolverCommand extends Command implements BackwardCompatibleCo
      */
     public function configure()
     {
-        $this->setName('ibexa:debug:config-resolver');
-        $this->setAliases(array_merge(['ibexa:debug:config'], $this->getDeprecatedAliases()));
+        $this->setName('exponential:debug:config-resolver');
+        $this->setAliases(array_merge(['exponential:debug:config', 'ibexa:debug:config-resolver', 'ibexa:debug:config'], $this->getDeprecatedAliases()));
         $this->setDescription('Debugs / Retrieves a parameter from the Config Resolver');
         $this->addArgument(
             'parameter',

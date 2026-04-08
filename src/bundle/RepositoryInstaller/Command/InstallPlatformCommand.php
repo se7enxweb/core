@@ -67,7 +67,7 @@ final class InstallPlatformCommand extends Command implements BackwardCompatible
 
     protected function configure()
     {
-        $this->setName('ibexa:install');
+        $this->setName('exponential:install');
         $this->setAliases($this->getDeprecatedAliases());
         $this->addArgument(
             'type',
@@ -213,10 +213,10 @@ final class InstallPlatformCommand extends Command implements BackwardCompatible
     private function indexData(OutputInterface $output, $siteaccess = null)
     {
         $output->writeln(
-            sprintf('Search engine re-indexing, executing command ibexa:reindex')
+            sprintf('Search engine re-indexing, executing command exponential:reindex')
         );
 
-        $command = 'ibexa:reindex';
+        $command = 'exponential:reindex';
         if ($siteaccess) {
             $command .= sprintf(' --siteaccess=%s', $siteaccess);
         }
@@ -326,7 +326,7 @@ final class InstallPlatformCommand extends Command implements BackwardCompatible
 
     public function getDeprecatedAliases(): array
     {
-        return ['ezplatform:install'];
+        return ['ibexa:install', 'ezplatform:install'];
     }
 }
 

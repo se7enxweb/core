@@ -37,7 +37,7 @@ EOT;
 
     private const SKIP_HASHING_COMMAND_PARAMETER = 'no-hash';
 
-    protected static $defaultName = 'ibexa:images:normalize-paths';
+    protected static $defaultName = 'exponential:images:normalize-paths';
 
     /** @var \Ibexa\Core\FieldType\Image\ImageStorage\Gateway */
     private $imageGateway;
@@ -66,6 +66,11 @@ EOT;
         $this->filePathNormalizer = $filePathNormalizer;
         $this->connection = $connection;
         $this->ioService = $ioService;
+    }
+
+    public function getAliases(): array
+    {
+        return ['ibexa:images:normalize-paths'];
     }
 
     protected function configure()

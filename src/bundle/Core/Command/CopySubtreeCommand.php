@@ -67,7 +67,7 @@ class CopySubtreeCommand extends Command implements BackwardCompatibleCommand
     protected function configure()
     {
         $this
-            ->setName('ibexa:copy-subtree')
+            ->setName('exponential:copy-subtree')
             ->setAliases($this->getDeprecatedAliases())
             ->addArgument(
                 'source-location-id',
@@ -185,7 +185,7 @@ class CopySubtreeCommand extends Command implements BackwardCompatibleCommand
 
     public function getDeprecatedAliases(): array
     {
-        return ['ezplatform:copy-subtree'];
+        return ['ibexa:copy-subtree', 'ezplatform:copy-subtree'];
     }
 }
 

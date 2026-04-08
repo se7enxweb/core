@@ -104,7 +104,7 @@ class ResizeOriginalImagesCommand extends Command implements BackwardCompatibleC
     protected function configure()
     {
         $this
-            ->setName('ibexa:images:resize-original')
+            ->setName('exponential:images:resize-original')
             ->setAliases($this->getDeprecatedAliases())
             ->addArgument(
                 'imageFieldIdentifier',
@@ -312,7 +312,7 @@ class ResizeOriginalImagesCommand extends Command implements BackwardCompatibleC
 
     public function getDeprecatedAliases(): array
     {
-        return ['ezplatform:images:resize-original'];
+        return ['ibexa:images:resize-original', 'ezplatform:images:resize-original'];
     }
 }
 

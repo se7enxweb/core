@@ -61,7 +61,7 @@ final class MigrateFilesCommand extends Command implements BackwardCompatibleCom
     protected function configure()
     {
         $this
-            ->setName('ibexa:io:migrate-files')
+            ->setName('exponential:io:migrate-files')
             ->setAliases($this->getDeprecatedAliases())
             ->setDescription('Migrates files from one IO repository to another')
             ->addOption('from', null, InputOption::VALUE_REQUIRED, 'Migrate from <from_metadata_handler>,<from_binarydata_handler>')
@@ -321,7 +321,7 @@ EOT
 
     public function getDeprecatedAliases(): array
     {
-        return ['ezplatform:io:migrate-files'];
+        return ['ibexa:io:migrate-files', 'ezplatform:io:migrate-files'];
     }
 }
 

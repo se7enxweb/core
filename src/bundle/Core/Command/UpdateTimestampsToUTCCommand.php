@@ -66,7 +66,7 @@ class UpdateTimestampsToUTCCommand extends Command implements BackwardCompatible
     protected function configure()
     {
         $this
-            ->setName('ibexa:timestamps:to-utc')
+            ->setName('exponential:timestamps:to-utc')
             ->setAliases($this->getDeprecatedAliases())
             ->setDescription('Updates ezdate and ezdatetime timestamps to UTC')
             ->addArgument(
@@ -506,7 +506,7 @@ EOT
 
     public function getDeprecatedAliases(): array
     {
-        return ['ezplatform:timestamps:to-utc'];
+        return ['ibexa:timestamps:to-utc', 'ezplatform:timestamps:to-utc'];
     }
 }
 

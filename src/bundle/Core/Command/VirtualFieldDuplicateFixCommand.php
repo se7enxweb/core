@@ -25,7 +25,7 @@ final class VirtualFieldDuplicateFixCommand extends Command
 
     private const DEFAULT_SLEEP = 0;
 
-    protected static $defaultName = 'ibexa:content:remove-duplicate-fields';
+    protected static $defaultName = 'exponential:content:remove-duplicate-fields';
 
     protected static $defaultDescription = 'Removes duplicate fields created as a result of faulty IBX-5388 performance fix.';
 
@@ -38,6 +38,11 @@ final class VirtualFieldDuplicateFixCommand extends Command
         parent::__construct();
 
         $this->connection = $connection;
+    }
+
+    public function getAliases(): array
+    {
+        return ['ibexa:content:remove-duplicate-fields'];
     }
 
     public function configure(): void

@@ -111,7 +111,7 @@ class ReindexCommand extends Command implements BackwardCompatibleCommand
     protected function configure()
     {
         $this
-            ->setName('ibexa:reindex')
+            ->setName('exponential:reindex')
             ->setAliases($this->getDeprecatedAliases())
             ->setDescription('Recreates or refreshes the search engine index')
             ->addOption(
@@ -407,7 +407,7 @@ class ReindexCommand extends Command implements BackwardCompatibleCommand
         $subProcessArgs = [
             $this->getPhpPath(),
             $consolePath,
-            'ibexa:reindex',
+            'exponential:reindex',
             '--content-ids=' . implode(',', $contentIds),
             '--env=' . $this->env,
         ];
@@ -487,7 +487,7 @@ class ReindexCommand extends Command implements BackwardCompatibleCommand
 
     public function getDeprecatedAliases(): array
     {
-        return ['ezplatform:reindex'];
+        return ['ibexa:reindex', 'ezplatform:reindex'];
     }
 }
 
