@@ -70,7 +70,7 @@ final class InstallPlatformCommand extends Command
             'type',
             InputArgument::OPTIONAL,
             'The type of install. Available options: ' . implode(', ', array_keys($this->installers)),
-            'exponential-platform-dxp'
+            'ibexa-oss'
         );
         $this->addOption(
             'skip-indexing',
@@ -146,6 +146,14 @@ final class InstallPlatformCommand extends Command
 
     private function checkCreateDatabase(OutputInterface $output): void
     {
+        // SQLite: the .db file is created automatically on first connect; listDatabases()
+        // is not supported by SQLite so doctrine:database:create would fail.
+        if ($this->connection->getDatabasePlatform() instanceof \Doctrine\DBAL\Platforms\SqlitePlatform) {
+            $output->writeln('SQLite detected — skipping doctrine:database:create (file will be created automatically).');
+
+            return;
+        }
+
         $output->writeln(
             sprintf(
                 'Creating connection <comment>%s</comment> if it does not exist, using doctrine:database:create --if-not-exists',

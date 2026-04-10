@@ -87,7 +87,14 @@ class DbBasedInstaller
      */
     final protected function getKernelSQLFileForDBMS($relativeFilePath)
     {
-        $databasePlatform = $this->db->getDatabasePlatform()->getName();
+        $platform = $this->db->getDatabasePlatform();
+        if ($platform instanceof \Doctrine\DBAL\Platforms\SqlitePlatform) {
+            $databasePlatform = 'sqlite';
+        } elseif ($platform instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform) {
+            $databasePlatform = 'postgresql';
+        } else {
+            $databasePlatform = 'mysql';
+        }
         $filePath = "{$this->baseDataDir}/{$databasePlatform}/{$relativeFilePath}";
 
         if (!is_readable($filePath)) {
