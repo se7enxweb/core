@@ -25,7 +25,7 @@ use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
 
 #[AsCommand(
-    name: 'ibexa:timestamps:to-utc',
+    name: 'exponential:timestamps:to-utc',
     description: 'Updates ibexa_date and ibexa_datetime timestamps to UTC'
 )]
 class UpdateTimestampsToUTCCommand extends Command

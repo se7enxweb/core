@@ -24,7 +24,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * @internal
  */
 #[AsCommand(
-    name: 'ibexa:content-type-group:set-system',
+    name: 'exponential:content-type-group:set-system',
     description: 'Sets information if ContentTypeGroup is a system group'
 )]
 final class SetSystemContentTypeGroupCommand extends Command

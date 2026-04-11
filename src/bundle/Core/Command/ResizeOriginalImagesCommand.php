@@ -38,7 +38,7 @@ use Symfony\Component\Mime\MimeTypesInterface;
 /**
  * This command resizes original images stored in ibexa_image FieldType in given ContentType using the selected filter.
  */
-#[AsCommand(name: 'ibexa:images:resize-original')]
+#[AsCommand(name: 'exponential:images:resize-original')]
 class ResizeOriginalImagesCommand extends Command
 {
     public const DEFAULT_ITERATION_COUNT = 25;

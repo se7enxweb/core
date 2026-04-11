@@ -24,7 +24,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
 
-#[AsCommand(name: 'ibexa:install')]
+#[AsCommand(name: 'exponential:install')]
 final class InstallPlatformCommand extends Command
 {
     public const int EXIT_GENERAL_DATABASE_ERROR = 4;
@@ -76,7 +76,7 @@ final class InstallPlatformCommand extends Command
             'skip-indexing',
             null,
             InputOption::VALUE_NONE,
-            'Skip indexing (ibexa:reindex)'
+            'Skip indexing (exponential:reindex)'
         );
     }
 
@@ -203,10 +203,10 @@ final class InstallPlatformCommand extends Command
     private function indexData(OutputInterface $output, $siteaccess = null)
     {
         $output->writeln(
-            sprintf('Search engine re-indexing, executing command ibexa:reindex')
+            sprintf('Search engine re-indexing, executing command exponential:reindex')
         );
 
-        $command = 'ibexa:reindex';
+        $command = 'exponential:reindex';
         if ($siteaccess) {
             $command .= sprintf(' --siteaccess=%s', $siteaccess);
         }

@@ -28,7 +28,7 @@ use Symfony\Component\Console\Question\ConfirmationQuestion;
  * Console command for deep copying subtree from one location to another.
  */
 #[AsCommand(
-    name: 'ibexa:copy-subtree',
+    name: 'exponential:copy-subtree',
     description: 'Copies a subtree from one Location to another'
 )]
 class CopySubtreeCommand extends Command

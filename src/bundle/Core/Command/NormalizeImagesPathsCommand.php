@@ -27,7 +27,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * @internal
  */
 #[AsCommand(
-    name: 'ibexa:images:normalize-paths',
+    name: 'exponential:images:normalize-paths',
     description: 'Normalizes stored paths for images.'
 )]
 final class NormalizeImagesPathsCommand extends Command

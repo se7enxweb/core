@@ -30,7 +30,7 @@ use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
 
 #[AsCommand(
-    name: 'ibexa:reindex',
+    name: 'exponential:reindex',
     description: 'Recreates or refreshes the search engine index'
 )]
 class ReindexCommand extends Command
@@ -168,18 +168,18 @@ class ReindexCommand extends Command
                     
                     Example usage:
                     - Refresh (add/update) index changes since yesterday:
-                      <comment>ibexa:reindex --since=yesterday</comment>
+                      <comment>exponential:reindex --since=yesterday</comment>
                       See: http://php.net/manual/en/datetime.formats.php
                     
                     - Refresh (add/update/remove) index on a set of content ID's:
-                      <comment>ibexa:reindex --content-ids=2,34,68</comment>
+                      <comment>exponential:reindex --content-ids=2,34,68</comment>
                     
                     - Refresh (add/update) index of a subtree for a single Location ID:
-                      <comment>ibexa:reindex --subtree=45</comment>
+                      <comment>exponential:reindex --subtree=45</comment>
                     
                     - Refresh (add/update) index, disabling the use of child proccesses and initial purging,
                       and let search engine handle commits using auto commit:
-                      <comment>ibexa:reindex --no-purge --no-commit --processes=0</comment>
+                      <comment>exponential:reindex --no-purge --no-commit --processes=0</comment>
                 
                 EOT
             );
@@ -400,7 +400,7 @@ class ReindexCommand extends Command
         $subProcessArgs = [
             $this->getPhpPath(),
             $consolePath,
-            'ibexa:reindex',
+            'exponential:reindex',
             '--content-ids=' . implode(',', $contentIds),
             '--env=' . $this->env,
         ];

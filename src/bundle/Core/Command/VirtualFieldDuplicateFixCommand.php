@@ -20,7 +20,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Stopwatch\Stopwatch;
 
 #[AsCommand(
-    name: 'ibexa:content:remove-duplicate-fields',
+    name: 'exponential:content:remove-duplicate-fields',
     description: 'Removes duplicate fields created as a result of faulty IBX-5388 performance fix.'
 )]
 final class VirtualFieldDuplicateFixCommand extends Command

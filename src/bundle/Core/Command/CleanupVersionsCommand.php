@@ -23,7 +23,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 #[AsCommand(
-    name: 'ibexa:content:cleanup-versions',
+    name: 'exponential:content:cleanup-versions',
     description: 'Removes unwanted content versions. Keeps the published version untouched. By default, also keeps the last archived/draft version.'
 )]
 class CleanupVersionsCommand extends Command

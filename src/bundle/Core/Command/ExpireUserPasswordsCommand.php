@@ -27,7 +27,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 #[AsCommand(
-    name: 'ibexa:user:expire-password',
+    name: 'exponential:user:expire-password',
     description: 'Expire passwords for selected users.'
 )]
 final class ExpireUserPasswordsCommand extends Command

@@ -14,7 +14,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-#[AsCommand(name: 'ibexa:user:validate-password-hashes')]
+#[AsCommand(name: 'exponential:user:validate-password-hashes')]
 final class ValidatePasswordHashesCommand extends Command
 {
     /** @var \Ibexa\Core\FieldType\User\UserStorage */

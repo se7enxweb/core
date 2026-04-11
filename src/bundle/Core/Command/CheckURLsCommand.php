@@ -24,7 +24,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 #[AsCommand(
-    name: 'ibexa:check-urls',
+    name: 'exponential:check-urls',
     description: 'Checks validity of external URLs'
 )]
 class CheckURLsCommand extends Command
@@ -50,7 +50,7 @@ class CheckURLsCommand extends Command
         URLService $urlService,
         URLCheckerInterface $urlChecker
     ) {
-        parent::__construct('ibexa:check-urls');
+        parent::__construct('exponential:check-urls');
 
         $this->userService = $userService;
         $this->permissionResolver = $permissionResolver;

@@ -19,9 +19,9 @@ use Symfony\Component\VarDumper\Cloner\VarCloner;
 use Symfony\Component\VarDumper\Dumper\CliDumper;
 
 #[AsCommand(
-    name: 'ibexa:debug:config-resolver',
+    name: 'exponential:debug:config-resolver',
     description: 'Debugs / Retrieves a parameter from the Config Resolver',
-    aliases: ['ibexa:debug:config']
+    aliases: ['exponential:debug:config']
 )]
 class DebugConfigResolverCommand extends Command
 {

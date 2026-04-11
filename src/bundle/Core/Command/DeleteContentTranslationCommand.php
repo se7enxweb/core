@@ -24,7 +24,7 @@ use Symfony\Component\Console\Question\ConfirmationQuestion;
  * Console Command which deletes a given Translation from all the Versions of a given Content Item.
  */
 #[AsCommand(
-    name: 'ibexa:delete-content-translation',
+    name: 'exponential:delete-content-translation',
     description: 'Deletes a translation from all versions of a Content item'
 )]
 class DeleteContentTranslationCommand extends Command
