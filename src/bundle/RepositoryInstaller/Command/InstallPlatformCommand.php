@@ -79,7 +79,7 @@ final class InstallPlatformCommand extends Command implements BackwardCompatible
             'skip-indexing',
             null,
             InputOption::VALUE_NONE,
-            'Skip indexing (ibexa:reindex)'
+            'Skip indexing (exponential:reindex)'
         );
     }
 

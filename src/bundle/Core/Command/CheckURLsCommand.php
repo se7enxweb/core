@@ -45,7 +45,7 @@ class CheckURLsCommand extends Command implements BackwardCompatibleCommand
         URLService $urlService,
         URLCheckerInterface $urlChecker
     ) {
-        parent::__construct('ibexa:check-urls');
+        parent::__construct('exponential:check-urls');
 
         $this->userService = $userService;
         $this->permissionResolver = $permissionResolver;
@@ -121,7 +121,7 @@ class CheckURLsCommand extends Command implements BackwardCompatibleCommand
 
     public function getDeprecatedAliases(): array
     {
-        return ['ezplatform:check-urls'];
+        return ['ibexa:check-urls', 'ezplatform:check-urls'];
     }
 }
 
