@@ -86,6 +86,7 @@ class CoreInstaller extends DbBasedInstaller implements Installer
         $progressBar->clear();
 
         $this->importNetgenLayoutsSchema();
+        $this->importLegacySchema();
     }
 
     /**
@@ -117,6 +118,78 @@ class CoreInstaller extends DbBasedInstaller implements Installer
             if (\is_readable($seedFile)) {
                 $this->runQueriesFromFile(\realpath($seedFile));
             }
+        }
+    }
+
+    /**
+     * Load the DBMS-specific eZ Publish legacy kernel SQL schema.
+     *
+     * Creates legacy ez_* tables that exist in ezpublish_legacy/kernel/sql but
+     * have no direct Ibexa DXP 5.x equivalent (e.g. ezbasket, ezdiscountrule).
+     * Tables that map 1:1 to ibexa_* counterparts are created as lightweight stubs;
+     * all legacy SQL queries against those are transparently redirected to their
+     * ibexa_* equivalents by the sevenx_exponential_platform_v5_database_connections
+     * extension at query time, so stub rows are never written to directly.
+     *
+     * Every CREATE TABLE statement is rewritten as CREATE TABLE IF NOT EXISTS so
+     * that the installer is idempotent and sqlite_sequence (auto-created by SQLite
+     * for AUTOINCREMENT tables) does not cause a duplicate-table error.
+     *
+     * Silently skipped if ezpublish_legacy/kernel/sql is not present.
+     */
+    private function importLegacySchema(): void
+    {
+        $platform = $this->db->getDatabasePlatform();
+        // Project root is seven directory levels above __DIR__ when this package
+        // is installed via Composer (vendor/se7enxweb/exponential-platform-dxp-core/
+        // src/bundle/RepositoryInstaller/Installer).
+        $projectDir = \dirname(__DIR__, 7);
+
+        if ($platform instanceof SqlitePlatform) {
+            $schemaFile = $projectDir . '/ezpublish_legacy/kernel/sql/sqlite/schema.sql';
+        } elseif ($platform instanceof PostgreSQLPlatform) {
+            $schemaFile = $projectDir . '/ezpublish_legacy/kernel/sql/postgresql/kernel_schema.sql';
+        } else {
+            $schemaFile = $projectDir . '/ezpublish_legacy/kernel/sql/mysql/kernel_schema.sql';
+        }
+
+        if (!\is_readable($schemaFile)) {
+            return;
+        }
+
+        $schemaFile = \realpath($schemaFile);
+
+        // Rewrite every CREATE TABLE → CREATE TABLE IF NOT EXISTS so that
+        // re-running the installer does not fail on existing tables.
+        $sql = \str_ireplace(
+            'CREATE TABLE ',
+            'CREATE TABLE IF NOT EXISTS ',
+            \file_get_contents($schemaFile)
+        );
+
+        $queries = \array_filter(\preg_split('(;\s*$)m', $sql));
+
+        // SQLite reserves the sqlite_sequence table for its own AUTOINCREMENT
+        // bookkeeping.  The legacy sqlite/schema.sql lists it explicitly as a
+        // plain CREATE TABLE statement, which errors even with IF NOT EXISTS
+        // ("object name reserved for internal use").  Strip it out.
+        $queries = \array_filter($queries, static function (string $q): bool {
+            return \stripos(\trim($q), 'create table if not exists sqlite_sequence') === false;
+        });
+
+        if (!$this->output->isQuiet()) {
+            $this->output->writeln(
+                \sprintf(
+                    '<info>Executing %d legacy schema queries from <comment>%s</comment> on database <comment>%s</comment></info>',
+                    \count($queries),
+                    $schemaFile,
+                    $this->db->getDatabase()
+                )
+            );
+        }
+
+        foreach ($queries as $query) {
+            $this->db->executeStatement($query);
         }
     }
 
