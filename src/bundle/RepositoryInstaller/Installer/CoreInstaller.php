@@ -10,6 +10,7 @@ namespace Ibexa\Bundle\RepositoryInstaller\Installer;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Platforms\SqlitePlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Ibexa\Contracts\DoctrineSchema\Builder\SchemaBuilderInterface;
@@ -83,6 +84,33 @@ class CoreInstaller extends DbBasedInstaller implements Installer
         $this->output->writeln(PHP_EOL);
         // clear any leftover progress bar parts in the output buffer
         $progressBar->clear();
+
+        $this->importNetgenLayoutsSchema();
+    }
+
+    /**
+     * Load the DBMS-specific Netgen Layouts DDL and create the nglayouts_* tables.
+     *
+     * Silently skipped if netgen/layouts-core is not installed.
+     */
+    private function importNetgenLayoutsSchema(): void
+    {
+        $platform = $this->db->getDatabasePlatform();
+        $vendorDir = \dirname(__DIR__, 6);
+
+        if ($platform instanceof SqlitePlatform) {
+            $schemaFile = $vendorDir . '/netgen/layouts-core/tests/_fixtures/schema/schema.sqlite.sql';
+        } elseif ($platform instanceof PostgreSQLPlatform) {
+            $schemaFile = $vendorDir . '/netgen/layouts-core/resources/data/schema.pgsql.sql';
+        } else {
+            $schemaFile = $vendorDir . '/netgen/layouts-core/resources/data/schema.mysql.sql';
+        }
+
+        if (!\is_readable($schemaFile)) {
+            return;
+        }
+
+        $this->runQueriesFromFile(\realpath($schemaFile));
     }
 
     /**
