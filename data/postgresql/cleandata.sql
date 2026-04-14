@@ -210,7 +210,6 @@ VALUES ('*',317,'content',0,3),
 INSERT INTO "ibexa_policy_limitation" ("id", "identifier", "policy_id")
 VALUES (251,'Section',328),
        (252,'Section',329),
-       (253,'SiteAccess',331),
        (254,'Class',333),
        (255,'Owner',333),
        (256,'Class',334);
@@ -218,7 +217,6 @@ VALUES (251,'Section',328),
 INSERT INTO "ibexa_policy_limitation_value" ("id", "limitation_id", "value")
 VALUES (477,251,'1'),
        (478,252,'1'),
-       (479,253,'1766001124'),
        (480,254,'4'),
        (481,255,'1'),
        (482,256,'5'),
