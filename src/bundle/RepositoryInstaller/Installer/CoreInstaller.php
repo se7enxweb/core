@@ -111,6 +111,13 @@ class CoreInstaller extends DbBasedInstaller implements Installer
         }
 
         $this->runQueriesFromFile(\realpath($schemaFile));
+
+        if ($platform instanceof SqlitePlatform) {
+            $seedFile = \dirname(__DIR__, 4) . '/data/sqlite/nglayouts_cleandata.sql';
+            if (\is_readable($seedFile)) {
+                $this->runQueriesFromFile(\realpath($seedFile));
+            }
+        }
     }
 
     /**
