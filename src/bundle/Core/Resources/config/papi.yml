@@ -1,5 +1,5 @@
 parameters:
-    ibexa.kernel.root_dir: "%kernel.project_dir%/vendor/ibexa/core"
+    ibexa.kernel.root_dir: "%kernel.project_dir%/vendor/se7enxweb/exponential-platform-dxp-core"
 
     # API
     ibexa.kernel.proxy_cache_dir: '%kernel.cache_dir%/repository/proxy'
