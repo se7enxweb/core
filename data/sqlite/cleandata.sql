@@ -205,7 +205,8 @@ VALUES ('*',317,'content',0,3),
        ('*',332,'*',0,2),
        ('read',333,'content',0,4),
        ('view_embed',334,'content',0,1),
-       ('*',340,'url',0,3);
+       ('*',340,'url',0,3),
+       ('buy',341,'shop',0,1);
 
 INSERT INTO "ibexa_policy_limitation" ("id", "identifier", "policy_id")
 VALUES (251,'Section',328),
