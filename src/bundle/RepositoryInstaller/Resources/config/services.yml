@@ -13,12 +13,16 @@ services:
     Ibexa\Bundle\RepositoryInstaller\Installer\CoreInstaller:
         autowire: true
         parent: Ibexa\Bundle\RepositoryInstaller\Installer\DbBasedInstaller
+        arguments:
+            $projectDir: "%kernel.project_dir%"
         tags:
             - { name: ibexa.installer, type: exponential-platform-dxp }
 
     Ibexa\Bundle\RepositoryInstaller\Installer\ExponentialOssInstaller:
         autowire: true
         parent: Ibexa\Bundle\RepositoryInstaller\Installer\DbBasedInstaller
+        arguments:
+            $projectDir: "%kernel.project_dir%"
         tags:
             - { name: ibexa.installer, type: exponential-oss }
 

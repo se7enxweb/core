@@ -25,15 +25,19 @@ class CoreInstaller extends DbBasedInstaller implements Installer
     /** @var \Ibexa\Contracts\DoctrineSchema\Builder\SchemaBuilderInterface */
     protected $schemaBuilder;
 
+    private string $projectDir;
+
     /**
      * @param \Doctrine\DBAL\Connection $db
      * @param \Ibexa\Contracts\DoctrineSchema\Builder\SchemaBuilderInterface $schemaBuilder
+     * @param string $projectDir Kernel project directory (for locating ezpublish_legacy)
      */
-    public function __construct(Connection $db, SchemaBuilderInterface $schemaBuilder)
+    public function __construct(Connection $db, SchemaBuilderInterface $schemaBuilder, string $projectDir = '')
     {
         parent::__construct($db);
 
         $this->schemaBuilder = $schemaBuilder;
+        $this->projectDir = $projectDir;
     }
 
     /**
@@ -88,6 +92,7 @@ class CoreInstaller extends DbBasedInstaller implements Installer
         $progressBar->clear();
 
         $this->importNetgenLayoutsSchema();
+        $this->importLegacyKernelSchema();
     }
 
     /**
@@ -97,6 +102,16 @@ class CoreInstaller extends DbBasedInstaller implements Installer
     public function importData()
     {
         $this->runQueriesFromFile($this->getKernelSQLFileForDBMS('cleandata.sql'));
+        $this->importLegacyKernelData();
+
+        // Remove any SiteAccess limitations — they contain CRC32 hashes of siteaccess
+        // names specific to the original eZ Publish demo install and would block
+        // anonymous login on any other siteaccess name.
+        $this->db->exec(
+            'DELETE FROM ezpolicy_limitation_value WHERE limitation_id IN'
+            . ' (SELECT id FROM ezpolicy_limitation WHERE identifier = \'SiteAccess\')'
+        );
+        $this->db->exec("DELETE FROM ezpolicy_limitation WHERE identifier = 'SiteAccess'");
     }
 
     /**
@@ -135,6 +150,89 @@ class CoreInstaller extends DbBasedInstaller implements Installer
      */
     public function createConfiguration()
     {
+    }
+
+    /**
+     * Import legacy eZ Publish kernel SQLite tables (CREATE TABLE IF NOT EXISTS).
+     *
+     * Only runs on SQLite. Uses IF NOT EXISTS to skip tables already created by
+     * the Ibexa SchemaBuilder. Also imports ezflow schema when available.
+     * Silently skipped when ezpublish_legacy is not present or on non-SQLite platforms.
+     */
+    private function importLegacyKernelSchema(): void
+    {
+        if (!$this->db->getDatabasePlatform() instanceof SqlitePlatform || empty($this->projectDir)) {
+            return;
+        }
+
+        $legacyDir = $this->projectDir . '/ezpublish_legacy';
+
+        $schemaFile = $legacyDir . '/kernel/sql/sqlite/schema.sql';
+        if (\is_readable($schemaFile)) {
+            $this->output->writeln('<info>Importing legacy kernel schema...</info>');
+            $sql = \file_get_contents($schemaFile);
+            // Avoid "table already exists" for tables created by Ibexa SchemaBuilder
+            $sql = \preg_replace('/\bCREATE TABLE\b/', 'CREATE TABLE IF NOT EXISTS', $sql);
+            $queries = \array_filter(\preg_split('(;\s*$)m', $sql));
+            foreach ($queries as $query) {
+                // sqlite_sequence is an internal SQLite table; skip any reference to it
+                if (\stripos($query, 'sqlite_sequence') !== false) {
+                    continue;
+                }
+                $this->db->exec($query);
+            }
+        }
+
+        // ezflow extension schema (if present)
+        $ezflowSchema = $legacyDir . '/extension/ezflow/sql/sqlite/sqlite.sql';
+        if (\is_readable($ezflowSchema)) {
+            $this->output->writeln('<info>Importing ezflow schema...</info>');
+            $sql = \file_get_contents($ezflowSchema);
+            $sql = \preg_replace('/\bCREATE TABLE\b/', 'CREATE TABLE IF NOT EXISTS', $sql);
+            $queries = \array_filter(\preg_split('(;\s*$)m', $sql));
+            foreach ($queries as $query) {
+                if (\stripos($query, 'sqlite_sequence') !== false) {
+                    continue;
+                }
+                $this->db->exec($query);
+            }
+        }
+    }
+
+    /**
+     * Import legacy eZ Publish kernel seed data.
+     *
+     * Runs AFTER our cleandata.sql so that our customised rows take precedence.
+     * Uses INSERT OR IGNORE INTO so duplicate primary keys (shared tables already
+     * seeded by our cleandata.sql) are silently skipped.
+     * Silently skipped when ezpublish_legacy is not present or on non-SQLite platforms.
+     */
+    private function importLegacyKernelData(): void
+    {
+        if (!$this->db->getDatabasePlatform() instanceof SqlitePlatform || empty($this->projectDir)) {
+            return;
+        }
+
+        $cleanDataFile = $this->projectDir . '/ezpublish_legacy/kernel/sql/sqlite/cleandata.sql';
+        if (!\is_readable($cleanDataFile)) {
+            return;
+        }
+
+        $this->output->writeln('<info>Importing legacy kernel seed data...</info>');
+        $sql = \file_get_contents($cleanDataFile);
+        // The legacy cleandata uses MySQL backslash-escape conventions inside single-quoted
+        // string literals: \" means literal double-quote, \' means literal single-quote.
+        // MySQL strips the backslash at import time; SQLite stores it verbatim, corrupting
+        // PHP serialized values and splitting strings prematurely on \'.
+        // Unescape both sequences to SQLite-compatible forms before executing.
+        $sql = \str_replace('\\"', '"', $sql);    // \" → "
+        $sql = \str_replace("\\'", "''", $sql);   // \' → '' (SQLite single-quote escape)
+        // Skip rows that conflict with seed data already inserted by our cleandata.sql
+        $sql = \preg_replace('/\bINSERT INTO\b/', 'INSERT OR IGNORE INTO', $sql);
+        $queries = \array_filter(\preg_split('(;\s*$)m', $sql));
+        foreach ($queries as $query) {
+            $this->db->exec($query);
+        }
     }
 
     /**
