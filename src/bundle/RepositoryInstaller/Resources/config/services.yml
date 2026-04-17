@@ -14,7 +14,13 @@ services:
         autowire: true
         parent: Ibexa\Bundle\RepositoryInstaller\Installer\DbBasedInstaller
         tags:
-            - { name: ibexa.installer, type: ibexa-oss }
+            - { name: ibexa.installer, type: exponential-platform-dxp }
+
+    Ibexa\Bundle\RepositoryInstaller\Installer\ExponentialOssInstaller:
+        autowire: true
+        parent: Ibexa\Bundle\RepositoryInstaller\Installer\DbBasedInstaller
+        tags:
+            - { name: ibexa.installer, type: exponential-oss }
 
     Ibexa\Bundle\RepositoryInstaller\Command\InstallPlatformCommand:
         arguments:

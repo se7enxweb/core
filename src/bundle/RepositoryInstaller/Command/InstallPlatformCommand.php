@@ -73,7 +73,7 @@ final class InstallPlatformCommand extends Command implements BackwardCompatible
             'type',
             InputArgument::OPTIONAL,
             'The type of install. Available options: ' . implode(', ', array_keys($this->installers)),
-            'ibexa-oss'
+            'exponential-oss'
         );
         $this->addOption(
             'skip-indexing',

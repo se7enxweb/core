@@ -205,12 +205,12 @@ VALUES ('*',317,'content',0,3),
        ('*',332,'*',0,2),
        ('read',333,'content',0,4),
        ('view_embed',334,'content',0,1),
-       ('*',340,'url',0,3);
+       ('*',340,'url',0,3),
+       ('*',341,'shop',0,1);
 
 INSERT INTO `ezpolicy_limitation` (`id`, `identifier`, `policy_id`)
 VALUES (251,'Section',328),
        (252,'Section',329),
-       (253,'SiteAccess',331),
        (254,'Class',333),
        (255,'Owner',333),
        (256,'Class',334);
@@ -218,8 +218,6 @@ VALUES (251,'Section',328),
 INSERT INTO `ezpolicy_limitation_value` (`id`, `limitation_id`, `value`)
 VALUES (477,251,'1'),
        (478,252,'1'),
-       (479,253,'1766001124'),
-       (484,253,'2282622326'),
        (480,254,'4'),
        (481,255,'1'),
        (482,256,'5'),
