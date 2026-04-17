@@ -104,6 +104,30 @@ class CoreInstaller extends DbBasedInstaller implements Installer
         $this->runQueriesFromFile($this->getKernelSQLFileForDBMS('cleandata.sql'));
         $this->importLegacyKernelData();
 
+        // Normalise version statuses imported from legacy kernel cleandata.
+        // eZ Publish legacy uses status=1 for PUBLISHED, but Ibexa Platform uses status=3.
+        // Any ezcontentobject_version with status=1 that is NOT already status=3 needs
+        // to be normalised so that Ibexa can recognise these versions as published.
+        // Step 1: versions that ARE the current published version of their object → status=3
+        $this->db->exec(
+            "UPDATE ezcontentobject_version SET status = 3"
+            . " WHERE status = 1"
+            . " AND version = (SELECT current_version FROM ezcontentobject WHERE id = contentobject_id)"
+        );
+        // Step 2: remaining status=1 versions are old legacy published versions → archive them
+        $this->db->exec("UPDATE ezcontentobject_version SET status = 2 WHERE status = 1");
+
+        // Fix ezxmltext data_text values: legacy SQL dumps store newlines as the two-character
+        // sequence backslash + n (literal \n) rather than as the real newline character (0x0A).
+        // PHP's DOMDocument::loadXML() rejects the literal \n between the XML declaration and
+        // the root element with "Start tag expected, '<' not found", so we normalise all stored
+        // ezxmltext data_text values to use real newlines after import.
+        $this->db->exec(
+            "UPDATE ezcontentobject_attribute"
+            . " SET data_text = REPLACE(data_text, '\\n', CHAR(10))"
+            . " WHERE data_type_string = 'ezxmltext'"
+        );
+
         // Remove any SiteAccess limitations — they contain CRC32 hashes of siteaccess
         // names specific to the original eZ Publish demo install and would block
         // anonymous login on any other siteaccess name.
