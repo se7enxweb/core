@@ -16,6 +16,7 @@ use Ibexa\Core\IO\IOServiceInterface;
 use Ibexa\Core\IO\Values\BinaryFile;
 use Ibexa\Core\IO\Values\BinaryFileCreateStruct;
 use Ibexa\Core\IO\Values\MissingBinaryFile;
+use Ibexa\Bundle\Core\Command\BackwardCompatibleCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -25,7 +26,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * @internal
  */
-final class NormalizeImagesPathsCommand extends Command
+final class NormalizeImagesPathsCommand extends Command implements BackwardCompatibleCommand
 {
     private const IMAGE_LIMIT = 100;
     private const BEFORE_RUNNING_HINTS = <<<EOT
@@ -75,6 +76,7 @@ EOT;
 
     protected function configure()
     {
+        $this->setAliases($this->getDeprecatedAliases());
         $beforeRunningHints = self::BEFORE_RUNNING_HINTS;
 
         $this
@@ -312,6 +314,11 @@ EOT
         }
 
         return $oldBinaryFilesToDelete;
+    }
+
+    public function getDeprecatedAliases(): array
+    {
+        return ['ibexa:images:normalize-paths', 'ezplatform:images:normalize-paths'];
     }
 }
 

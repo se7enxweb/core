@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace Ibexa\Bundle\Core\Command;
 
+use Ibexa\Bundle\Core\Command\BackwardCompatibleCommand;
 use Ibexa\Contracts\Core\Repository\ContentTypeService;
 use Ibexa\Contracts\Core\Repository\Exceptions\NotFoundException;
 use Ibexa\Contracts\Core\Repository\PermissionResolver;
@@ -22,7 +23,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * @internal
  */
-final class SetSystemContentTypeGroupCommand extends Command
+final class SetSystemContentTypeGroupCommand extends Command implements BackwardCompatibleCommand
 {
     private const DEFAULT_REPOSITORY_USER = 'admin';
 
@@ -56,6 +57,7 @@ final class SetSystemContentTypeGroupCommand extends Command
 
     protected function configure()
     {
+        $this->setAliases($this->getDeprecatedAliases());
         $this
             ->addArgument('content-type-group-identifier', InputArgument::REQUIRED, 'ContentTypGroup identifier')
             ->addOption(
@@ -122,5 +124,10 @@ EOT
         $io->success(sprintf('Done! ContentTypeGroup is set as a %s group.', $isSystemText));
 
         return self::SUCCESS;
+    }
+
+    public function getDeprecatedAliases(): array
+    {
+        return ['ibexa:content-type-group:set-system', 'ezplatform:content-type-group:set-system'];
     }
 }

@@ -115,7 +115,7 @@ EOM
 
     public function getDeprecatedAliases(): array
     {
-        return ['ezplatform:debug:config-resolver', 'ezplatform:debug:config'];
+        return ['ibexa:debug:config-resolver', 'ibexa:debug:config', 'ezplatform:debug:config-resolver', 'ezplatform:debug:config'];
     }
 }
 

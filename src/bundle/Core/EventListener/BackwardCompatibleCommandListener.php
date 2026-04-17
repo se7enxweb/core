@@ -39,7 +39,7 @@ final class BackwardCompatibleCommandListener implements EventSubscriberInterfac
         if (in_array($alias, $command->getDeprecatedAliases(), true)) {
             $io = new SymfonyStyle($event->getInput(), $event->getOutput());
             $io->warning(sprintf(
-                'Command alias "%s" is deprecated since 3.3 and will be removed in in 4.0. Use "%s" instead.',
+                'Command alias "%s" is deprecated in Exponential Platform 4.6 and will be removed in a future major release. Use "%s" instead.',
                 $alias,
                 $event->getCommand()->getName()
             ));

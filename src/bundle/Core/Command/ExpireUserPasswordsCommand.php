@@ -19,13 +19,14 @@ use Ibexa\Contracts\Core\Repository\Values\ContentType\ContentType;
 use Ibexa\Contracts\Core\Repository\Values\ContentType\FieldDefinition;
 use Ibexa\Contracts\Core\Repository\Values\Filter\Filter;
 use InvalidArgumentException;
+use Ibexa\Bundle\Core\Command\BackwardCompatibleCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-final class ExpireUserPasswordsCommand extends Command
+final class ExpireUserPasswordsCommand extends Command implements BackwardCompatibleCommand
 {
     protected static $defaultName = 'exponential:user:expire-password';
 
@@ -74,6 +75,7 @@ EOT;
 
     protected function configure(): void
     {
+        $this->setAliases($this->getDeprecatedAliases());
         $beforeRunningHints = self::BEFORE_RUNNING_HINTS;
         $this
             ->setDescription('Expire passwords for selected users.')
@@ -444,5 +446,10 @@ EOT
 
         return !$validatorConfiguration['PasswordValueValidator']['requireNewPassword']
             || 0 === $fieldSettings['PasswordTTL'];
+    }
+
+    public function getDeprecatedAliases(): array
+    {
+        return ['ibexa:user:expire-password', 'ezplatform:user:expire-password'];
     }
 }

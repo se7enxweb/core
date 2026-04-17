@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace Ibexa\Bundle\Core\Command;
 
 use Doctrine\DBAL\Connection;
+use Ibexa\Bundle\Core\Command\BackwardCompatibleCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -17,7 +18,7 @@ use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Stopwatch\Stopwatch;
 
-final class VirtualFieldDuplicateFixCommand extends Command
+final class VirtualFieldDuplicateFixCommand extends Command implements BackwardCompatibleCommand
 {
     private const DEFAULT_BATCH_SIZE = 10000;
 
@@ -47,6 +48,7 @@ final class VirtualFieldDuplicateFixCommand extends Command
 
     public function configure(): void
     {
+        $this->setAliases($this->getDeprecatedAliases());
         $this->addOption(
             'batch-size',
             'b',
@@ -264,5 +266,10 @@ final class VirtualFieldDuplicateFixCommand extends Command
             ->andWhere($query->expr()->in('id', array_map('strval', $ids)));
 
         return (int)$query->execute();
+    }
+
+    public function getDeprecatedAliases(): array
+    {
+        return ['ibexa:content:remove-duplicate-fields', 'ezplatform:content:remove-duplicate-fields'];
     }
 }
