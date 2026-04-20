@@ -22,6 +22,15 @@ services:
         tags:
             - { name: ibexa.installer, type: exponential-oss }
 
+    Ibexa\Bundle\RepositoryInstaller\Installer\ExponentialMediaInstaller:
+        autowire: true
+        parent: Ibexa\Bundle\RepositoryInstaller\Installer\DbBasedInstaller
+        calls:
+            - [setProjectDir, ['%kernel.project_dir%']]
+            - [setStoragePath, ['public/var/site/storage']]
+        tags:
+            - { name: ibexa.installer, type: exponential-media }
+
     Ibexa\Bundle\RepositoryInstaller\Command\InstallPlatformCommand:
         arguments:
             $connection: '@ibexa.persistence.connection'
