@@ -191,6 +191,58 @@ class CoreInstaller extends DbBasedInstaller implements Installer
         foreach ($queries as $query) {
             $this->db->executeStatement($query);
         }
+
+        $this->importLegacyExtensionSchema();
+    }
+
+    /**
+     * Load the full eZ Publish legacy extension SQL schema.
+     *
+     * Creates legacy ez_* tables used by extensions and admin modules (e.g.
+     * ezinformationcollection_attribute, ezenumvalue) that are not in the
+     * core kernel schema. The dump lives in ezpublish_legacy/share/ and is
+     * a mysqldump of the full legacy table set.
+     *
+     * Silently skipped if ezpublish_legacy/share/legacy_schema.sql is not present.
+     */
+    private function importLegacyExtensionSchema(): void
+    {
+        $projectDir = \dirname(__DIR__, 7);
+        $schemaFile = $projectDir . '/ezpublish_legacy/share/legacy_schema.sql';
+
+        if (!\is_readable($schemaFile)) {
+            return;
+        }
+
+        $schemaFile = \realpath($schemaFile);
+
+        $sql = \file_get_contents($schemaFile);
+
+        // The dump contains DROP TABLE IF EXISTS statements; they must not run
+        // because the database already contains data. Strip them and use IF NOT EXISTS.
+        $sql = \preg_replace('/^DROP TABLE IF EXISTS `[^`]+`;\s*$/m', '', $sql);
+        $sql = \str_ireplace('CREATE TABLE `', 'CREATE TABLE IF NOT EXISTS `', $sql);
+
+        $queries = \array_filter(\preg_split('/;\s*$/m', $sql));
+
+        if (!$this->output->isQuiet()) {
+            $this->output->writeln(
+                \sprintf(
+                    '<info>Executing %d legacy extension schema queries from <comment>%s</comment> on database <comment>%s</comment></info>',
+                    \count($queries),
+                    $schemaFile,
+                    $this->db->getDatabase()
+                )
+            );
+        }
+
+        foreach ($queries as $query) {
+            $query = \trim($query);
+            if ($query === '') {
+                continue;
+            }
+            $this->db->executeStatement($query);
+        }
     }
 
     /**
