@@ -92,7 +92,11 @@ class CoreInstaller extends DbBasedInstaller implements Installer
     /**
      * Load the DBMS-specific Netgen Layouts DDL and create the nglayouts_* tables.
      *
-     * Silently skipped if netgen/layouts-core is not installed.
+     * The package is looked up under both names it can be installed as:
+     * se7enxweb/layouts-core (the fork, which replaces netgen/layouts-core)
+     * and netgen/layouts-core (upstream). The first one that carries the
+     * schema file for the current database platform is used. When neither
+     * is installed the step is skipped, and the installer says so.
      */
     private function importNetgenLayoutsSchema(): void
     {
@@ -100,18 +104,45 @@ class CoreInstaller extends DbBasedInstaller implements Installer
         $vendorDir = \dirname(__DIR__, 6);
 
         if ($platform instanceof SqlitePlatform) {
-            $schemaFile = $vendorDir . '/netgen/layouts-core/tests/_fixtures/schema/schema.sqlite.sql';
+            $relativeSchemaFile = 'tests/_fixtures/schema/schema.sqlite.sql';
         } elseif ($platform instanceof PostgreSQLPlatform) {
-            $schemaFile = $vendorDir . '/netgen/layouts-core/resources/data/schema.pgsql.sql';
+            $relativeSchemaFile = 'resources/data/schema.pgsql.sql';
         } else {
-            $schemaFile = $vendorDir . '/netgen/layouts-core/resources/data/schema.mysql.sql';
+            $relativeSchemaFile = 'resources/data/schema.mysql.sql';
         }
 
-        if (!\is_readable($schemaFile)) {
+        $candidateFiles = [
+            $vendorDir . '/se7enxweb/layouts-core/' . $relativeSchemaFile,
+            $vendorDir . '/netgen/layouts-core/' . $relativeSchemaFile,
+        ];
+
+        $schemaFile = null;
+        foreach ($candidateFiles as $candidateFile) {
+            if (\is_readable($candidateFile)) {
+                $schemaFile = \realpath($candidateFile);
+                break;
+            }
+        }
+
+        if ($schemaFile === null) {
+            $this->output->writeln(
+                \sprintf(
+                    '<comment>Netgen Layouts schema not imported: no layouts-core package found. Looked for %s</comment>',
+                    \implode(' and ', $candidateFiles)
+                )
+            );
+
             return;
         }
 
-        $this->runQueriesFromFile(\realpath($schemaFile));
+        $this->output->writeln(
+            \sprintf(
+                '<info>Importing Netgen Layouts schema from <comment>%s</comment></info>',
+                $schemaFile
+            )
+        );
+
+        $this->runQueriesFromFile($schemaFile);
 
         if ($platform instanceof SqlitePlatform) {
             $seedFile = \dirname(__DIR__, 4) . '/data/sqlite/nglayouts_cleandata.sql';
