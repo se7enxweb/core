@@ -173,7 +173,7 @@ final class InstallPlatformCommand extends Command
                     $exception->getMessage()
                 )
             );
-            $this->output->writeln("Please check the database configuration in 'app/config/parameters.yml'");
+            $this->output->writeln('Please check DATABASE_URL in .env.local (or .env, or the environment) and the doctrine.dbal settings in config/packages/doctrine.yaml');
             exit(self::EXIT_GENERAL_DATABASE_ERROR);
         }
     }
