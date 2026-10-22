@@ -1,19 +1,24 @@
 name: Browser tests
 
+# Installs an Exponential Platform DXP project (se7enxweb skeleton, SQLite)
+# with this package from the checkout and checks the front page and the
+# admin login in Chromium.
+
 on:
     push:
         branches:
             - main
             - '[0-9]+.[0-9]+'
     pull_request: ~
+    workflow_dispatch: ~
+
+permissions:
+    contents: read
 
 jobs:
     core-behat:
-        name: "Kernel Behat Core tests"
-        uses: ibexa/gh-workflows/.github/workflows/browser-tests.yml@main
+        name: "Kernel browser tests"
+        uses: se7enxweb/gh-workflows/.github/workflows/browser-tests.yml@main
         with:
             project-edition: 'oss'
-            test-setup-phase-1: '--mode=standard --profile=core --suite=setup'
-            test-suite: "--mode=standard --profile=core --tags='~@broken&&~@setup'"
-        secrets:
-            SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        secrets: inherit
