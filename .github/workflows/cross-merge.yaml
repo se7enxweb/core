@@ -1,12 +1,19 @@
-name: Ibexa Reusable / Cross Org PR
+name: Cross Org PR
+
+# After a push, opens a pull request carrying the branch into the repository
+# named in .github/cross-merge-map.json (or se7enxweb/cross-merge-map).
+# Without a map nothing happens; pushing elsewhere needs SE7ENX_ROBOT_PAT.
 
 on:
   push:
     branches-ignore:
       - "temp_*"
 
+permissions:
+  contents: read
+
 jobs:
   call:
-    uses: ibexa/gh-workflows/.github/workflows/cross-merge.yml@main
+    uses: se7enxweb/gh-workflows/.github/workflows/cross-merge.yml@main
     secrets:
-      robot-token: ${{ secrets.EZROBOT_PAT }}
+      robot-token: ${{ secrets.SE7ENX_ROBOT_PAT }}

@@ -1,10 +1,17 @@
 name: Assign Pull Request to maintainers
 
+# Assigns a new pull request to the maintainers of the files it changes
+# (.github/maintainers.json, se7enxweb/pr-assignees, else the owner).
+
 on:
     pull_request_target:
+        types: [opened, reopened, ready_for_review]
+
+permissions:
+    contents: read
+    issues: write
+    pull-requests: write
 
 jobs:
     assign:
-        uses: ibexa/gh-workflows/.github/workflows/pr-assign.yml@main
-        secrets:
-            robot-token: ${{ secrets.EZROBOT_PAT }}
+        uses: se7enxweb/gh-workflows/.github/workflows/pr-assign.yml@main
