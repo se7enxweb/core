@@ -298,8 +298,9 @@ class ReindexCommand extends Command
         $progress->setFormat('very_verbose');
         $progress->start($iterations);
 
+        $failedProcesses = 0;
         if ($processCount > 1) {
-            $this->runParallelProcess(
+            $failedProcesses = $this->runParallelProcess(
                 $progress,
                 $batchList,
                 (int)$processCount,
@@ -320,6 +321,16 @@ class ReindexCommand extends Command
         // clear leftover progress bar parts
         $progress->clear();
 
+        if ($failedProcesses > 0) {
+            $output->writeln(sprintf(
+                '<error>%d of %d iteration(s) failed in a child indexer process; the index is incomplete. See the log for the errors.</error>',
+                $failedProcesses,
+                $iterations
+            ));
+
+            return self::FAILURE;
+        }
+
         return self::SUCCESS;
     }
 
@@ -336,6 +347,8 @@ class ReindexCommand extends Command
     /**
      * @param iterable<int, array<int>> $batchList
      *
+     * @return int the number of child processes that did not exit successfully
+     *
      * @throws \Ibexa\Contracts\Core\Repository\Exceptions\InvalidArgumentException
      */
     private function runParallelProcess(
@@ -343,7 +356,8 @@ class ReindexCommand extends Command
         iterable $batchList,
         int $processCount,
         bool $commit
-    ): void {
+    ): int {
+        $failed = 0;
         $generator = $this->buildGenerator($batchList);
         /** @var \Symfony\Component\Process\Process[]|null[] $processes */
         $processes = array_fill(0, $processCount, null);
@@ -359,6 +373,7 @@ class ReindexCommand extends Command
                     $progress->advance(1);
 
                     if (!$process->isSuccessful()) {
+                        ++$failed;
                         $this->logger->error(
                             sprintf(
                                 'Child indexer process returned: %s - %s',
@@ -383,6 +398,8 @@ class ReindexCommand extends Command
                 sleep(1);
             }
         } while (!empty($processes));
+
+        return $failed;
     }
 
     /**
