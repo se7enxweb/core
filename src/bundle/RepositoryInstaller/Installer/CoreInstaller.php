@@ -235,9 +235,18 @@ class CoreInstaller extends DbBasedInstaller implements Installer
      * a mysqldump of the full legacy table set.
      *
      * Silently skipped if ezpublish_legacy/share/legacy_schema.sql is not present.
+     *
+     * The dump is MySQL syntax (AUTO_INCREMENT, ENGINE=, /*!...*\/ blocks), so it only runs on
+     * MySQL and MariaDB; SQLite and PostgreSQL get the legacy tables from the kernel schema of
+     * their own platform (importLegacyKernelSchema above).
      */
     private function importLegacyExtensionSchema(): void
     {
+        $platform = $this->db->getDatabasePlatform();
+        if ($platform instanceof SqlitePlatform || $platform instanceof PostgreSQLPlatform) {
+            return;
+        }
+
         $projectDir = \dirname(__DIR__, 7);
         $schemaFile = $projectDir . '/ezpublish_legacy/share/legacy_schema.sql';
 
