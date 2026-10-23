@@ -143,6 +143,23 @@ final class DynamicPathFilesystemAdapterDecoratorTest extends TestCase
     /**
      * @throws \League\Flysystem\FilesystemException
      */
+    public function testDirectoryExists(): void
+    {
+        $this
+            ->innerAdapterMock
+            ->expects(self::once())
+            ->method('directoryExists')
+            ->with(
+                $this->buildAbsolutePath(self::MY_DIR_NAME)
+            )
+            ->willReturn(true);
+
+        self::assertTrue($this->adapter->directoryExists(self::MY_DIR_NAME));
+    }
+
+    /**
+     * @throws \League\Flysystem\FilesystemException
+     */
     public function testLastModified(): void
     {
         $lastModified = 1673264474;
