@@ -44,6 +44,7 @@ services:
             $isDebug: '%kernel.debug%'
             $contentIdListGeneratorStrategy: '@Ibexa\Bundle\Core\Command\Indexer\ContentIdList\ContentTypeInputGeneratorStrategy'
             $repositoryConfigurationProvider: '@Ibexa\Contracts\Core\Container\ApiLoader\RepositoryConfigurationProviderInterface'
+            $connection: '@ibexa.persistence.connection'
         tags:
             - { name: console.command }
 

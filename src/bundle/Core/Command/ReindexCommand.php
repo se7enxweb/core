@@ -9,6 +9,8 @@ namespace Ibexa\Bundle\Core\Command;
 
 use function count;
 use DateTime;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Platforms\SqlitePlatform;
 use const DIRECTORY_SEPARATOR;
 use Ibexa\Bundle\Core\Command\Indexer\ContentIdListGeneratorStrategyInterface;
 use Ibexa\Contracts\Core\Container\ApiLoader\RepositoryConfigurationProviderInterface;
@@ -17,6 +19,7 @@ use Ibexa\Contracts\Core\Search\Content\IndexerGateway;
 use Ibexa\Core\Base\Exceptions\InvalidArgumentException;
 use Ibexa\Core\Search\Common\IncrementalIndexer;
 use Ibexa\Core\Search\Common\Indexer;
+use Ibexa\Core\Search\Legacy\Content\Indexer as LegacySearchIndexer;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -78,7 +81,8 @@ class ReindexCommand extends Command
         string $projectDir,
         ContentIdListGeneratorStrategyInterface $contentIdListGeneratorStrategy,
         private readonly RepositoryConfigurationProviderInterface $repositoryConfigurationProvider,
-        ?string $phpPath = null
+        ?string $phpPath = null,
+        private readonly ?Connection $connection = null
     ) {
         $this->gateway = $gateway;
         $this->searchIndexer = $searchIndexer;
@@ -279,6 +283,12 @@ class ReindexCommand extends Command
         $processes = $input->getOption('processes');
         $processCount = $processes === 'auto' ? $this->getNumberOfCPUCores() - 1 : (int) $processes;
         $processCount = min($iterations, $processCount);
+        if ($processCount > 1 && $this->writesIndexToSqlite()) {
+            // SQLite takes one writer at a time: parallel children writing the legacy search index
+            // fail with "database is locked", and the indexer only logs each failed content item.
+            $output->writeln('<comment>The legacy search index is stored in SQLite, which takes one writer at a time: indexing in a single process.</comment>');
+            $processCount = 1;
+        }
         $processMessage = $processCount > 1 ? "using $processCount parallel child processes" : 'using a single (current) process';
 
         if ($purge) {
@@ -332,6 +342,13 @@ class ReindexCommand extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    private function writesIndexToSqlite(): bool
+    {
+        return $this->searchIndexer instanceof LegacySearchIndexer
+            && $this->connection !== null
+            && $this->connection->getDatabasePlatform() instanceof SqlitePlatform;
     }
 
     /**
