@@ -104,18 +104,15 @@ class CoreInstaller extends DbBasedInstaller implements Installer
         $this->runQueriesFromFile($this->getKernelSQLFileForDBMS('cleandata.sql'));
         $this->importLegacyKernelData();
 
-        // Normalise version statuses imported from legacy kernel cleandata.
-        // eZ Publish legacy uses status=1 for PUBLISHED, but Ibexa Platform uses status=3.
-        // Any ezcontentobject_version with status=1 that is NOT already status=3 needs
-        // to be normalised so that Ibexa can recognise these versions as published.
-        // Step 1: versions that ARE the current published version of their object → status=3
+        // One published version per content item. The legacy kernel and the Platform use the same
+        // version statuses (0 draft, 1 published, 2 pending, 3 archived, 5 internal draft): a
+        // published version that is not the content item's current version (one the legacy seed
+        // data brought in) is an archived one. The current version stays published.
         $this->db->exec(
-            "UPDATE ezcontentobject_version SET status = 3"
-            . " WHERE status = 1"
-            . " AND version = (SELECT current_version FROM ezcontentobject WHERE id = contentobject_id)"
+            'UPDATE ezcontentobject_version SET status = 3'
+            . ' WHERE status = 1'
+            . ' AND version <> (SELECT current_version FROM ezcontentobject WHERE id = contentobject_id)'
         );
-        // Step 2: remaining status=1 versions are old legacy published versions → archive them
-        $this->db->exec("UPDATE ezcontentobject_version SET status = 2 WHERE status = 1");
 
         // Fix ezxmltext data_text values: legacy SQL dumps store newlines as the two-character
         // sequence backslash + n (literal \n) rather than as the real newline character (0x0A).
@@ -288,8 +285,95 @@ class CoreInstaller extends DbBasedInstaller implements Installer
         // Skip rows that conflict with seed data already inserted by our cleandata.sql
         $sql = \preg_replace('/\bINSERT INTO\b/', 'INSERT OR IGNORE INTO', $sql);
         $queries = \array_filter(\preg_split('(;\s*$)m', $sql));
+
+        // The legacy seed data has its own copies of the content items our cleandata.sql seeded
+        // (content 1 version 6, Media's fields in eng-US, a language this installation does not
+        // have). Rows of them that do not collide with a primary key are added by INSERT OR IGNORE
+        // all the same, and the Platform admin cannot load them: its versions tab failed with
+        // "Could not find 'Content' ... 'versionNo' => 6". Every row the legacy import adds to a
+        // content item cleandata.sql seeded is removed again: versions and links that were not
+        // seeded, and fields and names added after the seeded ones (rowid beyond the seeded rows).
+        $this->db->exec('DROP TABLE IF EXISTS temp.exp_seeded_versions');
+        $this->db->exec(
+            'CREATE TEMP TABLE exp_seeded_versions AS'
+            . ' SELECT contentobject_id, version FROM ezcontentobject_version'
+        );
+        $lastSeededRow = [];
+        foreach (['ezcontentobject_attribute', 'ezcontentobject_name'] as $table) {
+            $lastSeededRow[$table] = (int)$this->db->fetchOne('SELECT COALESCE(MAX(rowid), 0) FROM ' . $table);
+        }
+
         foreach ($queries as $query) {
             $this->db->exec($query);
+        }
+
+        $seededContent = ' IN (SELECT DISTINCT contentobject_id FROM temp.exp_seeded_versions)';
+        $notSeededVersion = ' AND NOT EXISTS (SELECT 1 FROM temp.exp_seeded_versions s'
+            . ' WHERE s.contentobject_id = %1$s.%2$s AND s.version = %1$s.%3$s)';
+        foreach ([
+            ['ezcontentobject_link', 'from_contentobject_id', 'from_contentobject_version'],
+            ['ezcontentobject_version', 'contentobject_id', 'version'],
+        ] as [$table, $contentColumn, $versionColumn]) {
+            $this->db->exec(
+                'DELETE FROM ' . $table . ' WHERE ' . $contentColumn . $seededContent
+                . \sprintf($notSeededVersion, $table, $contentColumn, $versionColumn)
+            );
+        }
+        foreach ($lastSeededRow as $table => $lastRow) {
+            $this->db->exec(
+                'DELETE FROM ' . $table . ' WHERE contentobject_id' . $seededContent . ' AND rowid > ' . $lastRow
+            );
+        }
+        $this->db->exec('DROP TABLE temp.exp_seeded_versions');
+
+        $this->renameLegacySeedLanguage();
+    }
+
+    /**
+     * The legacy seed data is written in eng-US, which it numbers language 2; cleandata.sql
+     * seeds language 2 as eng-GB, and INSERT OR IGNORE keeps that row. The content items and
+     * content types only the legacy seed has (Setup, Design, Common INI settings ...) then
+     * carry language mask 2 but eng-US field, name and translation rows, and the Platform admin
+     * failed on them with 'Undefined array key "eng-GB"'. Their eng-US rows are renamed to the
+     * locale of language 2, the language their masks name.
+     */
+    private function renameLegacySeedLanguage(): void
+    {
+        $legacyLocale = 'eng-US';
+        $locale = $this->db->fetchOne('SELECT locale FROM ezcontent_language WHERE id = 2');
+        if (!\is_string($locale) || $locale === '' || $locale === $legacyLocale) {
+            return;
+        }
+        if ($this->db->fetchOne('SELECT COUNT(*) FROM ezcontent_language WHERE locale = ?', [$legacyLocale]) > 0) {
+            return;
+        }
+
+        foreach ([
+            ['ezcontentobject_attribute', 'language_code'],
+            ['ezcontentobject_name', 'content_translation'],
+            ['ezcontentobject_name', 'real_translation'],
+            ['ezcontentclass_name', 'language_locale'],
+        ] as [$table, $column]) {
+            $this->db->executeStatement(
+                'UPDATE OR IGNORE ' . $table . ' SET ' . $column . ' = ? WHERE ' . $column . ' = ?',
+                [$locale, $legacyLocale]
+            );
+        }
+
+        // Serialized name and description lists are keyed by locale: s:6:"eng-US"
+        $from = 's:' . \strlen($legacyLocale) . ':"' . $legacyLocale . '"';
+        $to = 's:' . \strlen($locale) . ':"' . $locale . '"';
+        foreach ([
+            ['ezcontentclass', 'serialized_name_list'],
+            ['ezcontentclass', 'serialized_description_list'],
+            ['ezcontentclass_attribute', 'serialized_name_list'],
+            ['ezcontentclass_attribute', 'serialized_description_list'],
+        ] as [$table, $column]) {
+            $this->db->executeStatement(
+                'UPDATE ' . $table . ' SET ' . $column . ' = REPLACE(' . $column . ', ?, ?)'
+                . ' WHERE ' . $column . ' LIKE ?',
+                [$from, $to, '%' . $from . '%']
+            );
         }
     }
 
