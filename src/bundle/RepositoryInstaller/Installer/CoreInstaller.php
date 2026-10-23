@@ -22,6 +22,18 @@ use Symfony\Component\Console\Helper\ProgressBar;
  */
 class CoreInstaller extends DbBasedInstaller implements Installer
 {
+    /**
+     * Legacy tables the legacy kernel reaches through a Platform table, because the legacy
+     * database handler rewrites the table name at query time, and whose legacy columns keep
+     * their names there. Only the legacy columns the Platform table lacks are added to it.
+     */
+    private const array LEGACY_TABLES_ON_PLATFORM_TABLES = [
+        'ezcontentbrowsebookmark' => 'ibexa_content_bookmark',
+        'ezcontentobject_trash' => 'ibexa_content_trash',
+    ];
+
+    private const string LEGACY_COLUMN_PROBE_TABLE = 'exp_legacy_column_probe';
+
     /** @var \Ibexa\Contracts\DoctrineSchema\Builder\SchemaBuilderInterface */
     protected $schemaBuilder;
 
@@ -219,11 +231,106 @@ class CoreInstaller extends DbBasedInstaller implements Installer
             );
         }
 
+        $tablesBeforeImport = \array_map('strtolower', $this->db->createSchemaManager()->listTableNames());
+
         foreach ($queries as $query) {
             $this->db->executeStatement($query);
+            $this->addMissingLegacyColumns($query, $tablesBeforeImport);
         }
 
         $this->importLegacyExtensionSchema();
+    }
+
+    /**
+     * Give tables that already existed before the legacy schema import the columns the
+     * legacy kernel's own CREATE TABLE has and they lack.
+     *
+     * Two cases are covered, on SQLite, PostgreSQL and MySQL alike:
+     *
+     * - The legacy table itself already existed. Its CREATE TABLE IF NOT EXISTS is then a
+     *   no-op, and the legacy kernel's queries (and the legacy indexes that follow) would
+     *   reference columns the table never got.
+     * - The legacy kernel reaches the table through a Platform table at query time (the legacy
+     *   database handler rewrites the table name, see LEGACY_TABLES_ON_PLATFORM_TABLES). The
+     *   legacy table is only a stub then, and the Platform table has to carry the legacy
+     *   columns, e.g. ezcontentbrowsebookmark.folder_id and priority on ibexa_content_bookmark.
+     *
+     * The legacy definition is read by creating it once under a probe name and reading the
+     * columns back through the schema manager, so no dialect-specific DDL has to be parsed.
+     * A column that is NOT NULL without a default is added as nullable, and AUTOINCREMENT is
+     * never added to an existing table.
+     *
+     * @param string[] $tablesBeforeImport lower-case names of the tables that existed before the import
+     *
+     * @throws \Doctrine\DBAL\Exception
+     */
+    private function addMissingLegacyColumns(string $query, array $tablesBeforeImport): void
+    {
+        if (!\preg_match('/^(\s*CREATE TABLE IF NOT EXISTS\s+)([`"]?)(\w+)\2(?=\s*\()/i', $query, $match)) {
+            return;
+        }
+
+        $legacyTable = \strtolower($match[3]);
+        $targets = [];
+        if (\in_array($legacyTable, $tablesBeforeImport, true)) {
+            $targets[] = $legacyTable;
+        }
+        $platformTable = self::LEGACY_TABLES_ON_PLATFORM_TABLES[$legacyTable] ?? null;
+        if ($platformTable !== null && \in_array($platformTable, $tablesBeforeImport, true)) {
+            $targets[] = $platformTable;
+        }
+        if ($targets === []) {
+            return;
+        }
+
+        $platform = $this->db->getDatabasePlatform();
+        $schemaManager = $this->db->createSchemaManager();
+        $probe = self::LEGACY_COLUMN_PROBE_TABLE;
+        if ($schemaManager->tablesExist([$probe])) {
+            $schemaManager->dropTable($probe);
+        }
+
+        $this->db->executeStatement(
+            \substr_replace($query, $match[1] . $match[2] . $probe . $match[2], 0, \strlen($match[0]))
+        );
+        try {
+            $legacyColumns = $schemaManager->listTableColumns($probe);
+        } finally {
+            $schemaManager->dropTable($probe);
+        }
+
+        foreach ($targets as $table) {
+            $existing = [];
+            foreach ($schemaManager->listTableColumns($table) as $column) {
+                $existing[\strtolower($column->getName())] = true;
+            }
+
+            foreach ($legacyColumns as $column) {
+                if (isset($existing[\strtolower($column->getName())])) {
+                    continue;
+                }
+
+                $definition = $column->toArray();
+                $definition['autoincrement'] = false;
+                if ($column->getNotnull() && $column->getDefault() === null) {
+                    $definition['notnull'] = false;
+                }
+
+                $this->db->executeStatement(\sprintf(
+                    'ALTER TABLE %s ADD COLUMN %s',
+                    $platform->quoteIdentifier($table),
+                    $platform->getColumnDeclarationSQL($platform->quoteIdentifier($column->getName()), $definition)
+                ));
+
+                if (!$this->output->isQuiet()) {
+                    $this->output->writeln(\sprintf(
+                        '<info>Added legacy column <comment>%s</comment> to <comment>%s</comment></info>',
+                        $column->getName(),
+                        $table
+                    ));
+                }
+            }
+        }
     }
 
     /**
