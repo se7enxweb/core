@@ -35,13 +35,6 @@ final class DynamicPathFilesystemAdapterDecorator implements FilesystemAdapter
         return $this->innerAdapter->fileExists($path);
     }
 
-    public function directoryExists(string $path): bool
-    {
-        $path = $this->prefixer->prefixPath($path);
-
-        return $this->innerAdapter->directoryExists($path);
-    }
-
     public function write(string $path, string $contents, Config $config): void
     {
         $path = $this->prefixer->prefixPath($path);
