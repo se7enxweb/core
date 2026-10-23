@@ -496,7 +496,9 @@ class Mapper
                 $versionInfo->creationDate = (int)$row['ezcontentobject_version_created'];
                 $versionInfo->modificationDate = (int)$row['ezcontentobject_version_modified'];
                 $versionInfo->status = (int)$row['ezcontentobject_version_status'];
-                $versionInfo->names = $nameData[$versionId];
+                // A version without names: the legacy kernel writes them when a draft is stored, so an
+                // internal draft (status 5, an edit form opened in the legacy admin) has none yet.
+                $versionInfo->names = $nameData[$versionId] ?? [];
                 $versionInfoList[$versionId] = $versionInfo;
                 $versionInfo->languageCodes = $this->extractLanguageCodesFromMask(
                     (int)$row['ezcontentobject_version_language_mask'],
