@@ -203,6 +203,7 @@ class CoreInstaller extends DbBasedInstaller implements Installer
                 if (\stripos($query, 'sqlite_sequence') !== false) {
                     continue;
                 }
+                $this->addMissingLegacyColumns($query);
                 $this->db->exec($query);
             }
         }
@@ -220,6 +221,39 @@ class CoreInstaller extends DbBasedInstaller implements Installer
                 }
                 $this->db->exec($query);
             }
+        }
+    }
+
+    /**
+     * A legacy CREATE TABLE for a table the Ibexa SchemaBuilder already created is skipped by
+     * IF NOT EXISTS, so columns only the legacy kernel has (ezcontentobject_trash.trashed_by and
+     * trashed_via, for one) would be missing, and the legacy indexes on them fail. Add each such
+     * column to the existing table first. SQLite's ADD COLUMN takes no PRIMARY KEY and needs a
+     * default for NOT NULL, so those parts are left out where they cannot apply.
+     */
+    private function addMissingLegacyColumns(string $query): void
+    {
+        if (!\preg_match('/^\s*CREATE TABLE IF NOT EXISTS\s+[`"]?(\w+)[`"]?\s*\(/i', $query, $table)) {
+            return;
+        }
+        $existing = \array_map(
+            'strtolower',
+            \array_column($this->db->fetchAllAssociative('PRAGMA table_info("' . $table[1] . '")'), 'name')
+        );
+        if ($existing === []) {
+            return;
+        }
+        // one column per line: "  `name` type ..." or ",  `name` type ..."; constraints are not quoted
+        \preg_match_all('/^\s*,?\s*`(\w+)`\s+(.+?)\s*$/m', $query, $columns, \PREG_SET_ORDER);
+        foreach ($columns as [, $name, $definition]) {
+            if (\in_array(\strtolower($name), $existing, true)) {
+                continue;
+            }
+            $definition = \trim(\preg_replace('/\b(PRIMARY KEY|AUTOINCREMENT)\b/i', '', \rtrim($definition, ',')));
+            if (\stripos($definition, 'NOT NULL') !== false && \stripos($definition, 'DEFAULT') === false) {
+                $definition = \trim(\preg_replace('/\bNOT NULL\b/i', '', $definition));
+            }
+            $this->db->exec('ALTER TABLE "' . $table[1] . '" ADD COLUMN `' . $name . '` ' . $definition);
         }
     }
 
