@@ -50,8 +50,30 @@ class ExponentialMediaInstaller extends CoreInstaller
      */
     public function importSchema(): void
     {
+        $mediaSchemaFile = $this->getKernelSQLFileForDBMS('media_schema.sql');
+        $this->dropMediaSchemaTables($mediaSchemaFile);
         parent::importSchema();
-        $this->runQueriesFromFile($this->getKernelSQLFileForDBMS('media_schema.sql'));
+        $this->runQueriesFromFile($mediaSchemaFile);
+    }
+
+    /**
+     * Drop the tables media_schema.sql creates, before anything else is created.
+     *
+     * media_schema.sql uses CREATE TABLE IF NOT EXISTS, and the Platform schema drop only
+     * covers the tables the schema builder knows. Without this, running the install a second
+     * time kept the old rows of these tables and the seed data failed on a duplicate key
+     * (novaseo_meta). Dropping them first gives a repeated install the state of a fresh one.
+     */
+    private function dropMediaSchemaTables(string $mediaSchemaFile): void
+    {
+        \preg_match_all('/CREATE TABLE IF NOT EXISTS\s+[`"]?(\w+)[`"]?/i', (string) \file_get_contents($mediaSchemaFile), $matches);
+        $platform = $this->db->getDatabasePlatform();
+        $schemaManager = $this->db->createSchemaManager();
+        foreach (\array_unique($matches[1]) as $table) {
+            if ($schemaManager->tablesExist([$table])) {
+                $this->db->executeStatement('DROP TABLE ' . $platform->quoteIdentifier($table));
+            }
+        }
     }
 
     public function importData(): void
